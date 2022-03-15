@@ -1,0 +1,246 @@
+---
+title: "Most searched programming languages by tag on stackoverflow 2004-2018"
+output: github_document
+---
+
+#### **Quick introduction**
+____________________________________________________________________________________________________________________________________________
+
+Anyone who has worked with programming languages knows how helpful platforms such as Stack overflow are.By using appropriate tags, we gain access to a treasure trove of knowledge which are answers of other users who struggled with similar problems.
+
+I want to find out how often R and Python and their libraries have been searched over time. I also want to compare R and Python to other programs that enable data analysis. Also to see which languages were most searched in the period 2008 - 2018.
+I hope you enjoy this simple analysis. 
+
+
+#### **Data**
+____________________________________________________________________________________________________________________________________________
+The following analysis and visualizations are based on data downloaded from DataCamp [link](https://projects.datacamp.com/projects/435). They represent the number of searches for particular tags on the Stack Overflow platform between 2008 and 2018. 
+
+
+#### **Analysis**
+____________________________________________________________________________________________________________________________________________
+
+###### Data loading
+
+For this analysis I use the R with the packages 'tidyverse', 'lubridate', 'ggthemr'.
+
+```{r message=FALSE, warning=FALSE, include=TRUE}
+# Load libraries
+library(tidyverse)
+library(lubridate)
+library(ggthemr)
+ggthemr("dust")
+```
+
+
+```{r message=FALSE, warning=FALSE, include=TRUE}
+# Load data
+tag_by_year <- read_csv('by_tag_year.csv')
+
+```
+
+###### Checking data
+
+A quick look at the data before analysis. Let's see what the table looks like and what the variable type is. 
+
+```{r}
+# check the data
+print(tag_by_year)
+glimpse(tag_by_year)
+summary(tag_by_year)
+```
+
+The column 'year' is a 'numeric' type. Let's change it to "date" type.
+
+```{r}
+class(tag_by_year$year)
+tag_by_year$year <- ymd(tag_by_year$year, truncated = 2L)
+class(tag_by_year$year)
+
+```
+
+
+
+Let's look for missing and unique values
+
+```{r}
+# missing values 
+sum(is.na(tag_by_year))
+
+# unique values in columns tag, year_total
+unique_tags <- tag_by_year %>% 
+  select(tag) %>% 
+  unique()
+
+unique_tags
+```
+
+##### **Total searches over time**
+____________________________________________________________________________________________________________________________________________
+
+Before we look at the results of individual tag searches, let's analyse the number of total searches over the years. 
+
+```{r message=FALSE, warning=FALSE, include=TRUE}
+total_searches_per_year <- tag_by_year %>% 
+  group_by(year, year_total) %>% 
+  summarise()
+
+total_searches_per_year
+```
+
+###### Let's visualise it
+
+```{r}
+ggplot(total_searches_per_year, aes(year, year_total)) +
+  geom_line(lwd = 1, linejoin = "round") +
+  ggtitle("Total searches per year") +
+  xlab("Year") +
+  ylab("Number of searches") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.position = "none")
+
+ggsave("myplot.png", device = "png",
+       width = 10, height = 4, units = "in", dpi = 600, type = "cairo-png")
+```
+
+##### **R vs Python**
+____________________________________________________________________________________________________________________________________________
+Let's see how the percentage of searches for R and Python breaks down compared to all languages.
+
+###### First, add a column with percentages
+
+```{r}
+# Add percentage column
+tag_by_year_percentage <- tag_by_year %>%
+  mutate(fraction = (number/year_total)*100)
+
+# Print the new table
+print(tag_by_year_percentage)
+```
+
+###### Then, filter out R and Python
+```{r}
+# Filter for R and python tags
+r_python_over_time <- tag_by_year_percentage %>%
+  filter(tag %in% c("r", "python"))
+
+# Print the new table
+print(r_python_over_time)
+```
+
+###### Visualize it
+
+```{r}
+# Create a line plot of fraction over time
+ggplot(r_python_over_time, aes(year, fraction, color = tag)) +
+  geom_line(lwd = 1)+
+  ggtitle("How often was the 'R' and 'python' tag searched for?") +
+  xlab("Year") +
+  ylab("Percentage of all searches by year") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.position = c(.20, .95),
+        legend.justification = c("right", "top"),
+        legend.box.just = "right",
+        legend.box.margin = margin(4, 4, 4, 4),
+        legend.title.align=0.5)+
+  labs(color = 'Tags')
+```
+
+#### **Let's find out how often R/Python libraries were searched**
+
+```{r}
+# A vector of selected tags 
+selected_tags <- c('dplyr', 'ggplot2', "tidyverse", 'matplotlib', 'pandas', 'numpy')
+
+# Filter for those tags
+selected_tags_over_time <- tag_by_year_percentage %>%
+  filter(tag %in% selected_tags)
+
+head(selected_tags_over_time, 50)
+```
+
+###### Visualize it
+
+```{r}
+# Plot tags over time on a line plot using color to represent tag
+ggplot(selected_tags_over_time, aes(year, fraction, color = tag)) +
+  geom_line(size = 1, alpha = 0.5) +
+  ggtitle("How often were R libraries searched?") +
+  xlab("Year") +
+  ylab("Percentage of searches") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.position = c(.25, 1),
+        legend.justification = c("right", "top"),
+        legend.box.just = "right",
+        legend.title.align=0.5)+
+  labs(color = 'Tags')
+```
+
+#### **Excel and more...**
+
+Let's see how often other data analysis programs such as 'spss', 'excel', 'sas', 'tableau', 'sql' were searched.
+
+```{r}
+analytisc_tags <- c("r", "python", "spss", 'excel', 'sas', 'tableau', 'sql')
+
+# Filter for those tags
+by_tag_subset <- tag_by_year_percentage %>%
+  filter(tag %in% analytisc_tags)
+
+by_tag_subset
+```
+
+###### Visualize it
+```{r}
+# Plot tags over time on a line plot using color to represent tag
+ggplot(by_tag_subset, aes(year, fraction, color = tag)) +
+  geom_line(size = 1, alpha = 0.5) +
+  ggtitle("How often were data analysis programmes searched?") +
+  xlab("Year") +
+  ylab("Percentage of searches") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.title.align=0.5,
+        legend.title = element_text(face = "bold"))+
+  labs(color = 'Tags')
+```
+
+#### **What we were looking for most**
+
+Finally, let's find out what were the most searched tags on stack overflow between 2008 and 2018
+
+```{r}
+sorted_tags <- tag_by_year %>%
+  group_by(tag) %>%
+  summarize(tag_total = sum(number)) %>%
+  arrange(desc(tag_total))
+
+# Print the new table
+print(sorted_tags)
+```
+
+On the search podium were 'javascript', 'java' and 'c#'. Let's see how the race has looked over these 10 years
+
+```{r}
+# Get the six largest tags
+highest_tags <- head(sorted_tags$tag)
+
+# Filter for the six largest tags
+by_tag_subset <- tag_by_year_percentage %>%
+  filter(tag %in% highest_tags)
+
+# Plot tags over time on a line plot using color to represent tag
+
+ggplot(by_tag_subset, aes(year, fraction, color = tag)) +
+  geom_line(size = 1, alpha = 0.5) +
+  ggtitle("Most searched programming languages between 2008 - 2018") +
+  xlab("Year") +
+  ylab("Number of searches") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(legend.title.align=0.5,
+        legend.title = element_text(face = "bold"))+
+  labs(color = 'Tags')
+
+
+```
+
+

@@ -185,6 +185,7 @@ ggplot(total_searches_per_year, aes(year, year_total)) +
   theme(plot.title = element_text(hjust = 0.5))+
   theme(legend.position = "none")
 ```
+![myplot](https://user-images.githubusercontent.com/93288880/158402885-2214877a-62f1-4321-bf54-c899a2cb1d4b.png)
 
 ![](Most-searched-programming-languages-by-tag-on-stackoverflow-2004-2018_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
